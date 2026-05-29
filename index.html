@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spazza Via la Feccia - Target 100</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1600');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-blend-mode: multiply;
+            background-color: #f4f6f7; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+            cursor: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: transparent;
+        }
+
+        /* Interfaccia Superiore */
+        #ui-header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 400px;
+            pointer-events: none;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        #ui-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        #ui-text {
+            font-size: 22px;
+            font-weight: 900;
+            color: #c0392b;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #progress-container {
+            width: 100%;
+            height: 16px;
+            background-color: #bdc3c7;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            transition: width 0.1s ease-out;
+        }
+
+        /* Schermata di transizione tra Schermi */
+        #victory-screen {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(26, 37, 48, 0.9);
+            z-index: 20;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        #victory-screen h1 {
+            font-size: 54px;
+            color: #2ecc71;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #victory-screen p {
+            font-size: 22px;
+            color: #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-header">
+        <div id="ui-title">Schermo <span id="screen-number">1</span></div>
+        <div id="ui-text">Feccia Eliminata: <span id="percentage">0</span> / 100</div>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div id="victory-screen">
+        <h1 id="victory-title">Schermo Completato!</h1>
+        <p>Il mondo è un posto un po' più pulito. Caricamento prossimo schermo...</p>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let pointer = { x: canvas.width / 2, y: canvas.height / 2 };
+        let currentScreen = 1;
+        let isLevelChanging = false;
+        let itemsCleaned = 0; // Contatore assoluto elementi eliminati
+        const winTarget = 100; // Quota fissa richiesta per vincere
+        
+        let broom = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            angle: 0,
+            width: 95,
+            height: 24
+        };
+
+        let dirtParticles = [];
+        let fxParticles = []; 
+
+        const types = ['INSECT', 'TANK', 'MISSILE', 'SOLDIER', 'PUTIN', 'NETANYAHU', 'KIM', 'TRUMP'];
+
+        // --- DISEGNO PROCEDURALE DELLE CARICATURE E UNITA' ---
+
+        function drawInsect(ctx, x, y, r) {
+            ctx.fillStyle = '#1e272e';
+            ctx.beginPath(); ctx.arc(x, y, r * 0.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x + r * 0.4, y, r * 0.25, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#1e272e'; ctx.lineWidth = 2;
+            ctx.beginPath();
+            for(let i = -1; i <= 1; i++) {
+                ctx.moveTo(x + (i * r * 0.2), y); ctx.lineTo(x + (i * r * 0.2), y + r);
+                ctx.moveTo(x + (i * r * 0.2), y); ctx.lineTo(x + (i * r * 0.2), y - r);
+            }
+            ctx.stroke();
+        }
+
+        function drawTank(ctx, x, y, r) {
+            ctx.fillStyle = '#27ae60'; ctx.fillRect(x - r, y - r*0.6, r*2, r*1.2);
+            ctx.fillStyle = '#1e7e34'; ctx.beginPath(); ctx.arc(x, y, r*0.5, 0, Math.PI*2); ctx.fill();
+            ctx.fillRect(x, y - 3, r*1.3, 6);
+        }
+
+        function drawMissile(ctx, x, y, r) {
+            ctx.save(); ctx.translate(x, y); ctx.rotate(-Math.PI / 4);
+            ctx.fillStyle = '#95a5a6'; ctx.fillRect(-r*0.8, -r*0.25, r*1.6, r*0.5);
+            ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.moveTo(r*0.8, -r*0.25); ctx.lineTo(r*1.3, 0); ctx.lineTo(r*0.8, r*0.25); ctx.closePath(); ctx.fill();
+            ctx.restore();
+        }
+
+        function drawSoldier(ctx, x, y, r) {
+            ctx.fillStyle = '#2d372c'; ctx.beginPath(); ctx.arc(x, y - r*0.3, r*0.4, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(x, y, r*0.3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#556b2f'; ctx.fillRect(x - r*0.3, y + r*0.3, r*0.6, r*0.7);
+        }
+
+        function drawPutin(ctx, x, y, r) {
+            ctx.fillStyle = '#1c2833'; ctx.fillRect(x - r*0.55, y + r*0.2, r*1.1, r*0.8);
+            ctx.fillStyle = '#fff'; ctx.fillRect(x - r*0.15, y + r*0.2, r*0.3, r*0.2);
+            ctx.fillStyle = '#fdebd0'; ctx.beginPath(); ctx.arc(x, y, r*0.45, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#d5dbdb';
+            ctx.beginPath(); ctx.arc(x - r*0.3, y - r*0.2, r*0.2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x + r*0.3, y - r*0.2, r*0.2, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#fdebd0'; ctx.beginPath(); ctx.arc(x, y - r*0.1, r*0.4, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#3498db'; ctx.fillRect(x - r*0.2, y - r*0.05, 3, 3); ctx.fillRect(x + r*0.1, y - r*0.05, 3, 3);
+        }
+
+        function drawNetanyahu(ctx, x, y, r) {
+            ctx.fillStyle = '#2c3e50'; ctx.fillRect(x - r*0.55, y + r*0.2, r*1.1, r*0.8);
+            ctx.fillStyle = '#5dade2'; ctx.fillRect(x - 3, y + r*0.2, 6, r*0.5);
+            ctx.fillStyle = '#fddba7'; ctx.beginPath(); ctx.arc(x, y, r*0.48, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ecf0f1'; ctx.beginPath(); ctx.arc(x, y - r*0.2, r*0.45, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = '#fddba7'; ctx.beginPath(); ctx.moveTo(x - r*0.2, y - r*0.6); ctx.lineTo(x, y - r*0.2); ctx.lineTo(x + r*0.4, y - r*0.5); ctx.fill();
+        }
+
+        function drawKim(ctx, x, y, r) {
+            ctx.fillStyle = '#212f3d'; ctx.fillRect(x - r*0.6, y + r*0.15, r*1.2, r*0.8);
+            ctx.fillStyle = '#fcdbb0'; ctx.beginPath(); ctx.arc(x, y + r*0.05, r*0.55, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#111111'; ctx.fillRect(x - r*0.5, y - r*0.65, r * 1, r*0.4);
+        }
+
+        function drawTrump(ctx, x, y, r) {
+            ctx.fillStyle = '#130f40'; ctx.fillRect(x - r*0.55, y + r*0.2, r*1.1, r*0.8); // Giacca blu notte
+            ctx.fillStyle = '#fff'; ctx.fillRect(x - r*0.15, y + r*0.2, r*0.3, r*0.2); // Camicia bianca
+            ctx.fillStyle = '#ff3838'; ctx.fillRect(x - 3, y + r*0.2, 6, r*0.5); // Cravattona rossa
+            ctx.fillStyle = '#f3a683'; ctx.beginPath(); ctx.arc(x, y, r*0.45, 0, Math.PI*2); ctx.fill(); // Viso dorato/arancio
+            
+            // Enorme Ciuffo Biondo tipico
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.moveTo(x - r*0.5, y - r*0.2);
+            ctx.quadraticCurveTo(x - r*0.6, y - r*0.7, x, y - r*0.7);
+            ctx.quadraticCurveTo(x + r*0.7, y - r*0.6, x + r*0.6, y - r*0.1);
+            ctx.lineTo(x + r*0.2, y - r*0.2);
+            ctx.closePath(); ctx.fill();
+        }
+
+        // --- FUNZIONE DI SPAWN SINGOLO ---
+        function spawnSingleItem(type = null, forceX = null, forceY = null, customGen = 1) {
+            let randomType = type || types[Math.floor(Math.random() * types.length)];
+            let radius = (randomType === 'PUTIN' || randomType === 'NETANYAHU' || randomType === 'KIM' || randomType === 'TRUMP') ? 32 : 22;
+            let speedMultiplier = 1 + (currentScreen * 0.3);
+
+            dirtParticles.push({
+                type: randomType,
+                x: forceX || Math.random() * (canvas.width - 120) + 60,
+                y: forceY || Math.random() * (canvas.height - 220) + 110,
+                radius: radius,
+                durability: 100,
+                generation: customGen,
+                active: true,
+                vx: (randomType === 'INSECT' || randomType === 'SOLDIER' || randomType === 'PUTIN' || randomType === 'TRUMP') ? (Math.random() - 0.5) * 4 * speedMultiplier : 0,
+                vy: (randomType === 'INSECT' || randomType === 'SOLDIER' || randomType === 'PUTIN' || randomType === 'TRUMP') ? (Math.random() - 0.5) * 4 * speedMultiplier : 0
+            });
+        }
+
+        // --- INIZIALIZZAZIONE SCHERMO ---
+        function initScreen(screen) {
+            dirtParticles = [];
+            fxParticles = [];
+            itemsCleaned = 0;
+            isLevelChanging = false;
+            document.getElementById('victory-screen').style.display = 'none';
+            document.getElementById('screen-number').innerText = screen;
+
+            // Popolamento di partenza (16 bersagli assortiti)
+            for (let i = 0; i < 16; i++) {
+                spawnSingleItem();
+            }
+        }
+
+        function triggerVictory() {
+            isLevelChanging = true;
+            document.getElementById('victory-screen').style.display = 'flex';
+            
+            setTimeout(() => {
+                currentScreen++;
+                initScreen(currentScreen);
+            }, 3000);
+        }
+
+        function createExplosion(x, y, color) {
+            let count = Math.floor(Math.random() * 5) + 3;
+            for(let i=0; i<count; i++) {
+                fxParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6,
+                    radius: Math.random() * 4 + 1, alpha: 1, color: color
+                });
+            }
+        }
+
+        // Start Gioco al livello 1
+        initScreen(currentScreen);
+
+        window.addEventListener('mousemove', (e) => { pointer.x = e.clientX; pointer.y = e.clientY; });
+        window.addEventListener('touchmove', (e) => { pointer.x = e.touches[0].clientX; pointer.y = e.touches[0].clientY; });
+
+        // --- LOOP PRINCIPALE ---
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. AGGIORNAMENTO UI CON PROGRESSI ASSOLUTI (0 -> 100)
+            document.getElementById('percentage').innerText = itemsCleaned;
+            document.getElementById('progress-bar').style.width = Math.min(100, itemsCleaned) + '%';
+
+            if (itemsCleaned >= winTarget && !isLevelChanging) {
+                triggerVictory();
+            }
+
+            // CONTROLLO ANTINOIA: Se ci sono meno di 6 bersagli attivi sulla mappa e non hai ancora vinto, ne spawna altri
+            let activeCount = 0;
+            dirtParticles.forEach(d => { if(d.active) activeCount++; });
+            if (activeCount < 6 && itemsCleaned < winTarget && !isLevelChanging) {
+                spawnSingleItem();
+            }
+
+            // 2. RENDERING E LOGICA DEI MOVIMENTI
+            dirtParticles.forEach(item => {
+                if (!item.active) return;
+
+                if (!isLevelChanging && (item.type === 'INSECT' || item.type === 'SOLDIER' || item.type === 'PUTIN' || item.type === 'TRUMP')) {
+                    item.x += item.vx; item.y += item.vy;
+                    if (item.x < 40 || item.x > canvas.width - 40) item.vx *= -1;
+                    if (item.y < 100 || item.y > canvas.height - 100) item.vy *= -1;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = item.durability / 100;
+                if (item.type === 'INSECT') drawInsect(ctx, item.x, item.y, item.radius);
+                if (item.type === 'TANK') drawTank(ctx, item.x, item.y, item.radius);
+                if (item.type === 'MISSILE') drawMissile(ctx, item.x, item.y, item.radius);
+                if (item.type === 'SOLDIER') drawSoldier(ctx, item.x, item.y, item.radius);
+                if (item.type === 'PUTIN') drawPutin(ctx, item.x, item.y, item.radius);
+                if (item.type === 'NETANYAHU') drawNetanyahu(ctx, item.x, item.y, item.radius);
+                if (item.type === 'KIM') drawKim(ctx, item.x, item.y, item.radius);
+                if (item.type === 'TRUMP') drawTrump(ctx, item.x, item.y, item.radius);
+                ctx.restore();
+            });
+
+            // 3. MOVIMENTO DEL PARTICELLARE
+            fxParticles.forEach((p, index) => {
+                p.x += p.vx; p.y += p.vy; p.alpha -= 0.03;
+                if (p.alpha <= 0) {
+                    fxParticles.splice(index, 1);
+                } else {
+                    ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+                    ctx.restore();
+                }
+            });
+
+            // 4. INERZIA DELLA SCOPA
+            let dx = pointer.x - broom.x;
+            let dy = pointer.y - broom.y;
+            broom.x += dx * 0.16; broom.y += dy * 0.16;
+            if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+                broom.angle = Math.atan2(dy, dx) + Math.PI / 2;
+            }
+
+            // 5. DISEGNO SCOPA
+            ctx.save();
+            ctx.translate(broom.x, broom.y); ctx.rotate(broom.angle);
+            ctx.fillStyle = '#cd853f'; ctx.fillRect(-4, -100, 8, 100); 
+            ctx.fillStyle = '#2c3e50'; ctx.fillRect(-broom.width / 2, 0, broom.width, broom.height); 
+            ctx.fillStyle = '#e67e22'; ctx.fillRect(-broom.width / 2, broom.height, broom.width, 16); 
+            ctx.restore();
+
+            // 6. COLLISIONI E INCREMENTO PUNTEGGI
+            if (!isLevelChanging) {
+                dirtParticles.forEach(item => {
+                    if (!item.active) return;
+
+                    let distDx = broom.x - item.x;
+                    let distDy = broom.y - item.y;
+                    let dist = Math.sqrt(distDx * distDx + distDy * distDy);
+
+                    if (dist < (broom.width / 2) + item.radius) {
+                        item.durability -= 4; // Forza abrasiva scopa
+
+                        let fxColor = '#7f8c8d';
+                        if (item.type === 'TANK') fxColor = '#27ae60';
+                        if (item.type === 'MISSILE') fxColor = '#e74c3c';
+                        if (item.type === 'PUTIN') fxColor = '#ecf0f1';
+                        if (item.type === 'NETANYAHU') fxColor = '#5dade2';
+                        if (item.type === 'KIM') fxColor = '#111111';
+                        if (item.type === 'TRUMP') fxColor = '#f1c40f'; // Scintille gialle per il ciuffo
+
+                        createExplosion(item.x, item.y, fxColor);
+
+                        if (item.durability <= 0) {
+                            item.active = false;
+                            itemsCleaned++; // Aggiunge +1 al contatore dei bersagli distrutti!
+
+                            // Meccanica di reazione/sdoppiamento dei leader e dei corazzati
+                            if (item.generation === 1) {
+                                if (item.type === 'PUTIN' || item.type === 'NETANYAHU' || item.type === 'KIM' || item.type === 'TRUMP') {
+                                    // I leader lasciano dietro di sé 2 missili di ritorsione immediata
+                                    spawnSingleItem('MISSILE', item.x - 25, item.y, 2);
+                                    spawnSingleItem('MISSILE', item.x + 25, item.y, 2);
+                                } else if (item.type === 'TANK') {
+                                    // I carri armati distrutti lasciano a terra un soldato appiedato
+                                    spawnSingleItem('SOLDIER', item.x, item.y, 2);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        update();
+    </script>
+</body>
+</html>
