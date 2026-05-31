@@ -1,33 +1,26 @@
 <!DOCTYPE html>
-<html lang="it">
-<head>
+<html lang="en"> <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wipe out the scum</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="style.css?v=1.1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <title>Wipe out the scum</title>
+    
+    <link rel="stylesheet" href="style.css?v=1.2">
 
-
-    <!-- Precarica lo sfondo del livello 1 e del livello 2 immediatamente -->
-<link rel="preload" as="image" href="mondo.webp">
-<link rel="preload" as="image" href="italia.webp">
-<link rel="manifest" href="manifest.json">
-<script>
-  if('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
-
-
+    <link rel="preload" as="image" href="mondo.webp">
+    <link rel="preload" as="image" href="italia.webp">
+    <link rel="manifest" href="manifest.json">
+    <script>
+      if('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
 </head>
 <body class="level-1"> 
-    <!-- NUOVO: Popup del Disclaimer Legale -->
+
     <div id="disclaimer-overlay">
         <div id="disclaimer-box">
             <h2>⚠️ INFORMATION AND LEGAL NOTICE</h2>
-            <p>This game is a work of satire and fiction. The characters, drawings, and situations depicted are purely fictional caricatures and are not intended to refer to real people or events. It is not intended to offend or defame anyone. This product is for entertainment purposes only, free of charge, and not for profit..</p>
-            <p></p>
-            <button id="btn-accetta">ACCEPT & JOIN</button>
+            <p>This game is a work of satire and fiction. The characters, drawings, and situations depicted are purely fictional caricatures and are not intended to refer to real people or events. It is not intended to offend or defame anyone. This product is for entertainment purposes only, free of charge, and not for profit.</p>
+            <button id="btn-accetta" onclick="">ACCEPT & JOIN</button>
         </div>
     </div>
 
@@ -48,9 +41,8 @@
         <canvas id="gameCanvas"></canvas>
     </div>
 
-    <!-- Caricamento della logica separata -->
-    <script src="livello1.js"></script>
-    <script src="livello2.js"></script>
-    <script src="main.js"></script>
+    <script src="livello1.js?v=1.2"></script>
+    <script src="livello2.js?v=1.2"></script>
+    <script src="main.js?v=1.2"></script>
 </body>
 </html>
