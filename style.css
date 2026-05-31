@@ -1,13 +1,13 @@
 body {
     margin: 0;
-    padding: 0; /* Evita micro-spostamenti o barre di scorrimento su alcuni browser mobile */
+    padding: 0;
     overflow: hidden;
     background-color: #1a1a1a; 
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100vw;  /* Forza la larghezza esatta dello schermo dello smartphone */
-    height: 100vh; /* Forza l'altezza esatta dello schermo dello smartphone */
+    width: 100vw;
+    height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     user-select: none;
     cursor: none;
@@ -20,19 +20,27 @@ body::before {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-size: cover;
-    background-position: center center; /* Centratura assoluta sia verticale che orizzontale per tablet/smartphone */
+    background-position: center center;
     background-repeat: no-repeat;
     filter: brightness(0.6) saturate(0.4); 
     z-index: -1;
     transition: background-image 0.5s ease-in-out;
 }
 
-body.level-1::before { background-image: url('mondo.webp'); }
-body.level-2::before { background-image: url('italia.webp'); }
+/* MODIFICA LIVELLO 1: Forziamo la mappa del mondo a entrare tutta nello schermo 
+   senza tagliarsi e allineandosi perfettamente ai confini del Canvas */
+body.level-1::before { 
+    background-image: url('mondo.webp'); 
+    background-size: 100% 100%; 
+}
 
-/* TRUCCO DI PRELOAD: Questo blocco invisibile costringe lo smartphone a scaricare lo sfondo dell'Italia 
-   subito all'avvio del gioco. Così, quando passerai al livello 2, l'immagine apparirà all'istante! */
+/* MODIFICA LIVELLO 2: L'Italia mantiene il cover perché essendo verticale 
+   si adatta nativamente ai display degli smartphone */
+body.level-2::before { 
+    background-image: url('italia.webp'); 
+    background-size: cover;
+}
+
 body::after {
     content: url('italia.webp');
     display: none;
