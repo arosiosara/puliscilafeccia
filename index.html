@@ -1,39 +1,32 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>>Wipe out the scum</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="style.css?v=1.1">
+<body class="level-1">
 
+    <div id="disclaimer-overlay">
+        <div id="disclaimer-box">
+            <h2>⚠️ INFORMATION AND LEGAL NOTICE</h2>
+            <p>This game is a work of satire and fiction. The characters, drawings, and settings depicted are purely fictional caricatures and are not intended to refer to real people or events. This product is produced for recreational and educational purposes only, and is completely free and non-profit.</p>
+            <button id="btn-accetta">ACCETTO E GIOCA</button>
+        </div>
+    </div>
 
-    <!-- Precarica lo sfondo del livello 1 e del livello 2 immediatamente -->
-<link rel="preload" as="image" href="mondo.webp">
-<link rel="preload" as="image" href="italia.webp">
-</head>
-<body class="level-1"> 
-
-    <div id="ui-header">
-        <div id="ui-title">Level <span id="screen-number">1</span></div>
-        <div id="ui-text">deleted items: <span id="percentage">0</span> / 100</div>
-        <div id="progress-container">
+    <div id="ui-container">
+        <div id="ui-header">
+            <div id="ui-title">Level: <span id="screen-number">1</span></div>
+            <div id="ui-score">Deleted objects: <span id="percentage">0</span> / 100</div>
+        </div>
+        <div id="progress-wrapper">
             <div id="progress-bar"></div>
         </div>
     </div>
 
     <div id="victory-screen">
-        <h1 id="victory-title">Cleansed world</h1>
-        <p id="victory-subtitle">Next Level...</p>
+        <div id="victory-box">
+            <h1 id="victory-title">Cleaned world map!</h1>
+            <p id="victory-subtitle">Next Level...</p>
+        </div>
     </div>
 
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-    </div>
+    <canvas id="gameCanvas"></canvas>
 
-    <!-- Caricamento della logica separata -->
-    <script src="livello1.js"></script>
-    <script src="livello2.js"></script>
+    <script src="livelli.js"></script>
     <script src="main.js"></script>
 </body>
-</html>
