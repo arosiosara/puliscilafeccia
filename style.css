@@ -15,7 +15,9 @@ body {
 
 body::before {
     content: "";
-    position: absolute;
+    /* MODIFICA FONDAMENTALE: fixed blocca l'immagine alla finestra del telefono 
+       impedendo lo zoom causato dal ridimensionamento del Canvas o delle barre mobile */
+    position: fixed; 
     top: 0;
     left: 0;
     width: 100vw;
@@ -27,25 +29,22 @@ body::before {
     transition: background-image 0.5s ease-in-out;
 }
 
-/* MODIFICA LIVELLO 1: Forziamo la mappa del mondo a entrare tutta nello schermo 
-   senza tagliarsi e allineandosi perfettamente ai confini del Canvas */
+/* Forziamo lo schiacciamento totale della mappa del mondo per farla entrare tutta */
 body.level-1::before { 
     background-image: url('mondo.webp'); 
-    background-size: 100% 100%; 
+    background-size: 100% 100% !important; 
 }
 
-/* MODIFICA LIVELLO 2: L'Italia mantiene il cover perché essendo verticale 
-   si adatta nativamente ai display degli smartphone */
+/* L'Italia rimane in modalità cover (perfetta per il verticale) */
 body.level-2::before { 
     background-image: url('italia.webp'); 
-    background-size: cover;
+    background-size: cover !important;
 }
 
 body::after {
     content: url('italia.webp');
     display: none;
 }
-
 #game-container {
     position: relative;
     width: 100vw;
