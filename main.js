@@ -5,7 +5,7 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let pointer = { x: canvas.width / 2, y: canvas.height / 2 };
-let currentScreen = 2; // Impostato a 2 per i tuoi test sull'Italia
+let currentScreen = 1; // Impostato a 2 per i tuoi test sull'Italia
 let isLevelChanging = false;
 let itemsCleaned = 0; 
 const winTarget = 100; 
