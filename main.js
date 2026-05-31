@@ -90,7 +90,7 @@ function createExplosion(x, y, color) {
 
 initScreen(currentScreen);
 
-// I controlli del puntatore si attivano solo se l'utente ha rimosso il disclaimer
+// I controlli si attivano solo se gameStarted è vero
 window.addEventListener('mousemove', (e) => { 
     if (!gameStarted) return;
     pointer.x = e.clientX; 
@@ -99,8 +99,10 @@ window.addEventListener('mousemove', (e) => {
 
 window.addEventListener('touchmove', (e) => { 
     if (!gameStarted) return;
-    pointer.x = e.touches[0].clientX; 
-    pointer.y = e.touches[0].clientY; 
+    if (e.touches && e.touches[0]) {
+        pointer.x = e.touches[0].clientX; 
+        pointer.y = e.touches[0].clientY; 
+    }
 }, { passive: true });
 
 function update() {
@@ -156,7 +158,6 @@ function update() {
         }
     });
 
-    // La scopa segue il puntatore solo se la partita è sbloccata
     if (gameStarted) {
         let dx = pointer.x - broom.x; let dy = pointer.y - broom.y;
         broom.x += dx * 0.16; broom.y += dy * 0.16;
@@ -204,69 +205,45 @@ function update() {
 
 update();
 
-// FUNZIONE DI SBLOCCO POTENZIATA (Risolve il blocco mobile/desktop)
-// FUNZIONE DI SBLOCCO PERFETTA PER MOBILE (Senza blocchi preventDefault)
+// GESTIONE SBLOCCO UNIFICATA E CORRETTA PER DESKTOP E MOBILE
 function handleStartGame(e) {
     if (e) {
-        e.stopPropagation(); // Impedisce al tocco di passare al canvas sotto
+        e.stopPropagation(); 
     }
     
     const overlay = document.getElementById('disclaimer-overlay');
     if (overlay) {
-        overlay.style.display = 'none'; // Nasconde la schermata nera
+        overlay.style.display = 'none'; 
         
-        // Registra la posizione iniziale della scopa dove l'utente ha toccato
-        if (e && e.clientX) {
-            pointer.x = e.clientX;
-            pointer.y = e.clientY;
+        // Riconoscimento della posizione su PC (clientX) o Smartphone (changedTouches)
+        if (e) {
+            if (e.clientX) {
+                pointer.x = e.clientX;
+                pointer.y = e.clientY;
+            } else if (e.changedTouches && e.changedTouches[0]) {
+                pointer.x = e.changedTouches[0].clientX;
+                pointer.y = e.changedTouches[0].clientY;
+            }
         }
+        
         broom.x = pointer.x;
         broom.y = pointer.y;
         
-        gameStarted = true; // Sblocca i nemici e la scopa nel ciclo update()
-        console.log("Game sbloccato con successo!");
+        gameStarted = true; 
+        console.log("Game started correctly!");
     }
 }
 
-// Intercettiamo il pulsante con l'evento più stabile in assoluto
+// ASCOLTO DEGLI EVENTI SUL PULSANTE (Unico blocco globale senza duplicati)
 const acceptBtn = document.getElementById('btn-accetta');
 if (acceptBtn) {
-    // Usiamo 'pointerdown' che è istantaneo, ma senza funzioni di blocco native del browser
-    acceptBtn.addEventListener('pointerdown', handleStartGame);
-}
-
-// Ridimensionamento della finestra
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
-
-// Aggancio degli eventi sul pulsante con rimozione dei conflitti mobile
-const acceptBtn = document.getElementById('btn-accetta');
-if (acceptBtn) {
-    // Per Computer Desktop
+    // Desktop mouse
     acceptBtn.addEventListener('click', handleStartGame);
-    
-    // Per Smartphone: 'touchend' è il più stabile in assoluto sui bottoni
+    // Mobile touch stabile
     acceptBtn.addEventListener('touchend', handleStartGame);
 }
 
-// Ridimensionamento dinamico della finestra di gioco
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
-
-// Aggancio degli eventi sul pulsante reale
-const acceptBtn = document.getElementById('btn-accetta');
-if (acceptBtn) {
-    // Click su PC desktop
-    acceptBtn.addEventListener('click', handleStartGame);
-    // Tocco immediato su Smartphone senza ritardi del browser
-    acceptBtn.addEventListener('touchstart', handleStartGame, { passive: false });
-}
-
-// Ridimensionamento dinamico della finestra di gioco in tempo reale
+// Unica istanza per il ridimensionamento della finestra
 window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
