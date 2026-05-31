@@ -26,8 +26,8 @@ body::before {
     transition: background-image 0.5s ease-in-out;
 }
 
-body.level-1::before { background-image: url('mondo.png'); }
-body.level-2::before { background-image: url('italia.png'); }
+body.level-1::before { background-image: url('mondo.webp'); }
+body.level-2::before { background-image: url('italia.webp'); }
 
 #game-container {
     position: relative;
