@@ -205,6 +205,7 @@ function update() {
 update();
 
 // FUNZIONE DI SBLOCCO POTENZIATA (Risolve il blocco mobile/desktop)
+// FUNZIONE DI SBLOCCO PERFETTA PER MOBILE (Senza blocchi preventDefault)
 function handleStartGame(e) {
     if (e) {
         e.stopPropagation(); // Impedisce al tocco di passare al canvas sotto
@@ -212,23 +213,33 @@ function handleStartGame(e) {
     
     const overlay = document.getElementById('disclaimer-overlay');
     if (overlay) {
-        overlay.style.display = 'none';
+        overlay.style.display = 'none'; // Nasconde la schermata nera
         
-        // Imposta il punto di partenza della scopa dove si è cliccato
-        if (e && e.changedTouches && e.changedTouches[0]) {
-            pointer.x = e.changedTouches[0].clientX;
-            pointer.y = e.changedTouches[0].clientY;
-        } else if (e && e.clientX) {
+        // Registra la posizione iniziale della scopa dove l'utente ha toccato
+        if (e && e.clientX) {
             pointer.x = e.clientX;
             pointer.y = e.clientY;
         }
         broom.x = pointer.x;
         broom.y = pointer.y;
         
-        gameStarted = true; 
-        console.log("Gioco sbloccato su dispositivo!");
+        gameStarted = true; // Sblocca i nemici e la scopa nel ciclo update()
+        console.log("Game sbloccato con successo!");
     }
 }
+
+// Intercettiamo il pulsante con l'evento più stabile in assoluto
+const acceptBtn = document.getElementById('btn-accetta');
+if (acceptBtn) {
+    // Usiamo 'pointerdown' che è istantaneo, ma senza funzioni di blocco native del browser
+    acceptBtn.addEventListener('pointerdown', handleStartGame);
+}
+
+// Ridimensionamento della finestra
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
 
 // Aggancio degli eventi sul pulsante con rimozione dei conflitti mobile
 const acceptBtn = document.getElementById('btn-accetta');
