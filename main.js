@@ -206,17 +206,19 @@ update();
 
 // FUNZIONE DI SBLOCCO POTENZIATA (Risolve il blocco mobile/desktop)
 function handleStartGame(e) {
-    if (e) e.preventDefault(); // Blocca azioni secondarie del browser mobile
+    if (e) {
+        e.stopPropagation(); // Impedisce al tocco di passare al canvas sotto
+    }
     
     const overlay = document.getElementById('disclaimer-overlay');
     if (overlay) {
         overlay.style.display = 'none';
         
-        // Centra la scopa sul punto cliccato per evitare scatti iniziali improvvisi
-        if (e && e.touches && e.touches[0]) {
-            pointer.x = e.touches[0].clientX;
-            pointer.y = e.touches[0].clientY;
-        } else if (e) {
+        // Imposta il punto di partenza della scopa dove si è cliccato
+        if (e && e.changedTouches && e.changedTouches[0]) {
+            pointer.x = e.changedTouches[0].clientX;
+            pointer.y = e.changedTouches[0].clientY;
+        } else if (e && e.clientX) {
             pointer.x = e.clientX;
             pointer.y = e.clientY;
         }
@@ -224,8 +226,25 @@ function handleStartGame(e) {
         broom.y = pointer.y;
         
         gameStarted = true; 
+        console.log("Gioco sbloccato su dispositivo!");
     }
 }
+
+// Aggancio degli eventi sul pulsante con rimozione dei conflitti mobile
+const acceptBtn = document.getElementById('btn-accetta');
+if (acceptBtn) {
+    // Per Computer Desktop
+    acceptBtn.addEventListener('click', handleStartGame);
+    
+    // Per Smartphone: 'touchend' è il più stabile in assoluto sui bottoni
+    acceptBtn.addEventListener('touchend', handleStartGame);
+}
+
+// Ridimensionamento dinamico della finestra di gioco
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
 
 // Aggancio degli eventi sul pulsante reale
 const acceptBtn = document.getElementById('btn-accetta');
