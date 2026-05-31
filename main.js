@@ -5,12 +5,12 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let pointer = { x: canvas.width / 2, y: canvas.height / 2 };
-let currentScreen = 1; // Impostato a 2 per i tuoi test sull'Italia
+let currentScreen = 1; 
 let isLevelChanging = false;
 let itemsCleaned = 0; 
 const winTarget = 100; 
 
-// AGGIUNTA: Il gioco parte fermo finché non si accetta il disclaimer
+// Il gioco parte congelato per mostrare il disclaimer legale
 let gameStarted = false; 
 
 let broom = { x: canvas.width / 2, y: canvas.height / 2, angle: 0, width: 95, height: 24 };
@@ -22,10 +22,7 @@ function spawnSingleItem(type = null, forceX = null, forceY = null, customGen = 
     let currentPool = (currentScreen === 1) ? level1Types : level2Types;
     let randomType = type || currentPool[Math.floor(Math.random() * currentPool.length)];
     
-    // Riconoscimento dei Leader
     let isLeader = ['PUTIN', 'NETANYAHU', 'KIM', 'TRUMP', 'MELONI', 'SALVINI'].includes(randomType);
-    
-    // RAGGIO AUMENTATO: I leader ora sono giganteschi (42) rispetto ai minion (24)
     let radius = isLeader ? 42 : 24; 
     
     let speedMultiplier = 1 + (currentScreen * 0.35);
@@ -57,17 +54,16 @@ function initScreen(screen) {
     if (screen === 1) document.getElementById('victory-title').innerText = "Mappa Mondiale Pulita!";
     if (screen === 2) document.getElementById('victory-title').innerText = "Italia Bonificata!";
 
-    // SPAWN GARANTITO: Obblighiamo il gioco a inserire i Leader principali subito
     if (screen === 1) {
         spawnSingleItem('TRUMP');
         spawnSingleItem('PUTIN');
         spawnSingleItem('KIM');
         spawnSingleItem('NETANYAHU');
-        for (let i = 0; i < 12; i++) spawnSingleItem(); // Genera i restanti a caso
+        for (let i = 0; i < 12; i++) spawnSingleItem(); 
     } else if (screen === 2) {
         spawnSingleItem('MELONI');
         spawnSingleItem('SALVINI');
-        for (let i = 0; i < 14; i++) spawnSingleItem(); // Genera i restanti a caso
+        for (let i = 0; i < 14; i++) spawnSingleItem(); 
     }
 }
 
@@ -94,8 +90,18 @@ function createExplosion(x, y, color) {
 
 initScreen(currentScreen);
 
-window.addEventListener('mousemove', (e) => { pointer.x = e.clientX; pointer.y = e.clientY; });
-window.addEventListener('touchmove', (e) => { pointer.x = e.touches[0].clientX; pointer.y = e.touches[0].clientY; });
+// I controlli del puntatore si attivano solo se l'utente ha rimosso il disclaimer
+window.addEventListener('mousemove', (e) => { 
+    if (!gameStarted) return;
+    pointer.x = e.clientX; 
+    pointer.y = e.clientY; 
+});
+
+window.addEventListener('touchmove', (e) => { 
+    if (!gameStarted) return;
+    pointer.x = e.touches[0].clientX; 
+    pointer.y = e.touches[0].clientY; 
+}, { passive: true });
 
 function update() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -103,19 +109,16 @@ function update() {
     document.getElementById('percentage').innerText = itemsCleaned;
     document.getElementById('progress-bar').style.width = Math.min(100, itemsCleaned) + '%';
 
-    // AGGIUNTA: Blocchiamo la logica di vittoria se il gioco non è iniziato
     if (gameStarted && itemsCleaned >= winTarget && !isLevelChanging) triggerVictory();
 
     let activeCount = 0;
     dirtParticles.forEach(d => { if(d.active) activeCount++; });
     
-    // AGGIUNTA: Blocchiamo lo spawn di nuovi nemici se il gioco non è iniziato
     if (gameStarted && activeCount < 6 && itemsCleaned < winTarget && !isLevelChanging) spawnSingleItem();
 
     dirtParticles.forEach(item => {
         if (!item.active) return;
 
-        // MODIFICA: I nemici si muovono solo se il gioco è iniziato (gameStarted è true)
         if (!isLevelChanging && gameStarted) {
             item.x += item.vx; item.y += item.vy;
             if (item.x < 50 || item.x > canvas.width - 50) item.vx *= -1;
@@ -153,9 +156,12 @@ function update() {
         }
     });
 
-    let dx = pointer.x - broom.x; let dy = pointer.y - broom.y;
-    broom.x += dx * 0.16; broom.y += dy * 0.16;
-    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) broom.angle = Math.atan2(dy, dx) + Math.PI / 2;
+    // La scopa segue il puntatore solo se la partita è sbloccata
+    if (gameStarted) {
+        let dx = pointer.x - broom.x; let dy = pointer.y - broom.y;
+        broom.x += dx * 0.16; broom.y += dy * 0.16;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) broom.angle = Math.atan2(dy, dx) + Math.PI / 2;
+    }
 
     ctx.save();
     ctx.translate(broom.x, broom.y); ctx.rotate(broom.angle);
@@ -164,7 +170,6 @@ function update() {
     ctx.fillStyle = '#e67e22'; ctx.fillRect(-broom.width / 2, broom.height, broom.width, 16); 
     ctx.restore();
 
-    // MODIFICA: La scopa pulisce solo se il gioco è iniziato (gameStarted è true)
     if (!isLevelChanging && gameStarted) {
         dirtParticles.forEach(item => {
             if (!item.active) return;
@@ -199,8 +204,40 @@ function update() {
 
 update();
 
-// AGGIUNTA FINALE: Gestione del pulsante per chiudere il disclaimer e avviare la logica di gioco
-document.getElementById('btn-accetta').addEventListener('click', () => {
-    document.getElementById('disclaimer-overlay').style.display = 'none';
-    gameStarted = true; // Sblocca il movimento e le collisioni
+// FUNZIONE DI SBLOCCO POTENZIATA (Risolve il blocco mobile/desktop)
+function handleStartGame(e) {
+    if (e) e.preventDefault(); // Blocca azioni secondarie del browser mobile
+    
+    const overlay = document.getElementById('disclaimer-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        
+        // Centra la scopa sul punto cliccato per evitare scatti iniziali improvvisi
+        if (e && e.touches && e.touches[0]) {
+            pointer.x = e.touches[0].clientX;
+            pointer.y = e.touches[0].clientY;
+        } else if (e) {
+            pointer.x = e.clientX;
+            pointer.y = e.clientY;
+        }
+        broom.x = pointer.x;
+        broom.y = pointer.y;
+        
+        gameStarted = true; 
+    }
+}
+
+// Aggancio degli eventi sul pulsante reale
+const acceptBtn = document.getElementById('btn-accetta');
+if (acceptBtn) {
+    // Click su PC desktop
+    acceptBtn.addEventListener('click', handleStartGame);
+    // Tocco immediato su Smartphone senza ritardi del browser
+    acceptBtn.addEventListener('touchstart', handleStartGame, { passive: false });
+}
+
+// Ridimensionamento dinamico della finestra di gioco in tempo reale
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 });
