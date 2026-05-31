@@ -10,13 +10,11 @@ body {
     height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     user-select: none;
-    cursor: none;
+    /* Rimosso cursor:none da qui per mostrare il mouse sul disclaimer */
 }
 
 body::before {
     content: "";
-    /* MODIFICA FONDAMENTALE: fixed blocca l'immagine alla finestra del telefono 
-       impedendo lo zoom causato dal ridimensionamento del Canvas o delle barre mobile */
     position: fixed; 
     top: 0;
     left: 0;
@@ -29,13 +27,11 @@ body::before {
     transition: background-image 0.5s ease-in-out;
 }
 
-/* Forziamo lo schiacciamento totale della mappa del mondo per farla entrare tutta */
 body.level-1::before { 
     background-image: url('mondo.webp'); 
     background-size: 100% 100% !important; 
 }
 
-/* L'Italia rimane in modalità cover (perfetta per il verticale) */
 body.level-2::before { 
     background-image: url('italia.webp'); 
     background-size: cover !important;
@@ -45,12 +41,28 @@ body::after {
     content: url('italia.webp');
     display: none;
 }
+
+/* Forziamo il contenitore del gioco sotto l'overlay finché non parte */
 #game-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100vw;
     height: 100vh;
     z-index: 1; 
 }
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    /* Nasconde il cursore SOLO sul canvas di gioco, così sul disclaimer si vede! */
+    cursor: none; 
+}
+
 /* --- STILE POPUP DISCLAIMER --- */
 #disclaimer-overlay {
     position: fixed;
@@ -58,13 +70,15 @@ body::after {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(26, 37, 48, 0.98); /* Sfondo scuro che copre il gioco all'avvio */
-    z-index: 9999; /* Sta sopra a qualsiasi altro elemento, scopa compresa */
+    background: rgba(26, 37, 48, 0.98); 
+    /* z-index altissimo per passare sopra a tutto il resto */
+    z-index: 999999 !important; 
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
     box-sizing: border-box;
+    pointer-events: auto; /* Forza la ricezione dei tocchi */
 }
 
 #disclaimer-box {
@@ -78,6 +92,8 @@ body::after {
     text-align: center;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+    z-index: 1000000 !important;
 }
 
 #disclaimer-box h2 {
@@ -99,26 +115,24 @@ body::after {
     background: #e74c3c;
     color: white;
     border: none;
-    padding: 12px 30px;
+    padding: 15px 30px; /* Incrementato leggermente per i pollici su mobile */
     font-size: 16px;
     font-weight: bold;
     border-radius: 6px;
-    cursor: pointer;
+    cursor: pointer; /* Ripristina la manina su PC */
     transition: background 0.2s;
     margin-top: 10px;
     width: 100%;
     text-transform: uppercase;
+    /* Proprietà anti-blocco per smartphone Android e iOS */
+    -webkit-appearance: none;
+    position: relative;
+    z-index: 2000000 !important;
+    touch-action: manipulation;
 }
 
 #disclaimer-box button:hover {
     background: #c0392b;
-}
-
-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: transparent;
 }
 
 #ui-header {
@@ -130,12 +144,14 @@ canvas {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 400px;
+    width: 90%; /* Più flessibile per schermi mobile stretti */
+    max-width: 400px;
     pointer-events: none;
     background: rgba(255, 255, 255, 0.95);
     padding: 12px 20px;
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    box-sizing: border-box;
 }
 
 #ui-title { font-size: 14px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 2px; }
@@ -161,5 +177,13 @@ canvas {
     backdrop-filter: blur(5px);
 }
 
-#victory-screen h1 { font-size: 54px; color: #2ecc71; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+#victory-screen h1 { font-size: 42px; color: #2ecc71; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
 #victory-screen p { font-size: 22px; color: #ecf0f1; }
+
+/* Ottimizzazione testo per schermi molto piccoli */
+@media (max-width: 480px) {
+    #disclaimer-box { padding: 15px; }
+    #disclaimer-box h2 { font-size: 16px; }
+    #disclaimer-box p { font-size: 12px; line-height: 1.4; }
+    #victory-screen h1 { font-size: 32px; }
+}
