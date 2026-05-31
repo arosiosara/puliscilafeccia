@@ -51,8 +51,8 @@ function initScreen(screen) {
 
     document.body.className = "level-" + screen;
     
-    if (screen === 1) document.getElementById('victory-title').innerText = "Mappa Mondiale Pulita!";
-    if (screen === 2) document.getElementById('victory-title').innerText = "Italia Bonificata!";
+    if (screen === 1) document.getElementById('victory-title').innerText = "Congratulations, you have cleaned the world of scum!";
+    if (screen === 2) document.getElementById('victory-title').innerText = "Congratulations, you have cleaned Italy from the scum!";
 
     if (screen === 1) {
         spawnSingleItem('TRUMP');

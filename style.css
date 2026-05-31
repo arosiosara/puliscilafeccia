@@ -125,7 +125,9 @@ canvas {
     width: 100%;
     text-transform: uppercase;
     /* Proprietà anti-blocco per smartphone Android e iOS */
+    appearance: none;
     -webkit-appearance: none;
+    -moz-appearance: none; /* Aggiunto anche per Firefox, per sicurezza */
     position: relative;
     z-index: 2000000 !important;
     touch-action: manipulation;
