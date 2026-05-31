@@ -10,6 +10,9 @@ let isLevelChanging = false;
 let itemsCleaned = 0; 
 const winTarget = 100; 
 
+// AGGIUNTA: Il gioco parte fermo finché non si accetta il disclaimer
+let gameStarted = false; 
+
 let broom = { x: canvas.width / 2, y: canvas.height / 2, angle: 0, width: 95, height: 24 };
 
 let dirtParticles = [];
@@ -100,16 +103,20 @@ function update() {
     document.getElementById('percentage').innerText = itemsCleaned;
     document.getElementById('progress-bar').style.width = Math.min(100, itemsCleaned) + '%';
 
-    if (itemsCleaned >= winTarget && !isLevelChanging) triggerVictory();
+    // AGGIUNTA: Blocchiamo la logica di vittoria se il gioco non è iniziato
+    if (gameStarted && itemsCleaned >= winTarget && !isLevelChanging) triggerVictory();
 
     let activeCount = 0;
     dirtParticles.forEach(d => { if(d.active) activeCount++; });
-    if (activeCount < 6 && itemsCleaned < winTarget && !isLevelChanging) spawnSingleItem();
+    
+    // AGGIUNTA: Blocchiamo lo spawn di nuovi nemici se il gioco non è iniziato
+    if (gameStarted && activeCount < 6 && itemsCleaned < winTarget && !isLevelChanging) spawnSingleItem();
 
     dirtParticles.forEach(item => {
         if (!item.active) return;
 
-        if (!isLevelChanging) {
+        // MODIFICA: I nemici si muovono solo se il gioco è iniziato (gameStarted è true)
+        if (!isLevelChanging && gameStarted) {
             item.x += item.vx; item.y += item.vy;
             if (item.x < 50 || item.x > canvas.width - 50) item.vx *= -1;
             if (item.y < 120 || item.y > canvas.height - 120) item.vy *= -1;
@@ -157,7 +164,8 @@ function update() {
     ctx.fillStyle = '#e67e22'; ctx.fillRect(-broom.width / 2, broom.height, broom.width, 16); 
     ctx.restore();
 
-    if (!isLevelChanging) {
+    // MODIFICA: La scopa pulisce solo se il gioco è iniziato (gameStarted è true)
+    if (!isLevelChanging && gameStarted) {
         dirtParticles.forEach(item => {
             if (!item.active) return;
             let distDx = broom.x - item.x; let distDy = broom.y - item.y;
@@ -190,3 +198,9 @@ function update() {
 }
 
 update();
+
+// AGGIUNTA FINALE: Gestione del pulsante per chiudere il disclaimer e avviare la logica di gioco
+document.getElementById('btn-accetta').addEventListener('click', () => {
+    document.getElementById('disclaimer-overlay').style.display = 'none';
+    gameStarted = true; // Sblocca il movimento e le collisioni
+});

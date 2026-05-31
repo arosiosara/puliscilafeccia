@@ -51,6 +51,68 @@ body::after {
     height: 100vh;
     z-index: 1; 
 }
+/* --- STILE POPUP DISCLAIMER --- */
+#disclaimer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(26, 37, 48, 0.98); /* Sfondo scuro che copre il gioco all'avvio */
+    z-index: 9999; /* Sta sopra a qualsiasi altro elemento, scopa compresa */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#disclaimer-box {
+    background: #2c3e50;
+    border: 2px solid #e74c3c;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    width: 100%;
+    color: #ecf0f1;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#disclaimer-box h2 {
+    color: #e74c3c;
+    font-size: 20px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+}
+
+#disclaimer-box p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    text-align: justify;
+}
+
+#disclaimer-box button {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+    width: 100%;
+    text-transform: uppercase;
+}
+
+#disclaimer-box button:hover {
+    background: #c0392b;
+}
 
 canvas {
     position: absolute;
@@ -59,142 +121,45 @@ canvas {
     background: transparent;
 }
 
-/* --- CONTENITORE UI GENERALE (In alto, fisso e centrato) --- */
-#ui-container {
-    position: fixed;
-    top: 10px;
+#ui-header {
+    position: absolute;
+    top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    width: 90%;
-    max-width: 600px;
-    z-index: 100;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    pointer-events: none; /* Evita che i tocchi sullo schermo blocchino il gioco */
-    user-select: none;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 400px;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-/* Header che contiene Livello a sinistra e Score a destra */
-#ui-header {
-    display: table;
-    width: 100%;
-    background: rgba(26, 26, 26, 0.85);
-    border: 1px solid #34495e;
-    border-radius: 8px 8px 0 0;
-    padding: 10px 15px;
-    box-sizing: border-box;
-}
+#ui-title { font-size: 14px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 2px; }
+#ui-text { font-size: 22px; font-weight: 900; color: #c0392b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
 
-#ui-title, #ui-score {
-    display: table-cell;
-    color: #ffffff;
-    font-weight: bold;
-    font-size: 16px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
+#progress-container { width: 100%; height: 16px; background-color: #bdc3c7; border-radius: 10px; overflow: hidden; }
+#progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #e74c3c, #c0392b); transition: width 0.1s ease-out; }
 
-#ui-score {
-    text-align: right;
-    color: #e67e22; /* Colore arancione scopa per risaltare */
-}
-
-/* Contenitore esterno della barra di progresso */
-#progress-wrapper {
-    width: 100%;
-    height: 12px;
-    background: rgba(44, 62, 80, 0.7);
-    border-radius: 0 0 8px 8px;
-    border: 1px solid #34495e;
-    border-top: none;
-    overflow: hidden;
-    box-sizing: border-box;
-}
-
-/* Barra interna che si muove */
-#progress-bar {
-    width: 0%;
-    height: 100%;
-    background: linear-gradient(90deg, #e67e22, #f39c12);
-    transition: width 0.1s linear;
-}
-
-/* --- SCHERMATA FINE LIVELLO / VITTORIA --- */
 #victory-screen {
-    position: fixed;
+    display: none;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(20, 30, 40, 0.92);
-    z-index: 200;
-    display: none; /* Gestito dal JS */
+    background: rgba(26, 37, 48, 0.9);
+    z-index: 20;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-#victory-box {
+    color: white;
     text-align: center;
-    background: #1a252f;
-    border: 3px solid #2ecc71; /* Bordo verde successo */
-    border-radius: 16px;
-    padding: 40px 30px;
-    max-width: 450px;
-    width: 100%;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(5px);
 }
 
-#victory-title {
-    color: #2ecc71;
-    font-size: 28px;
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-family: 'Segoe UI', sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-#victory-subtitle {
-    color: #bdc3c7;
-    font-size: 16px;
-    margin: 0;
-}
-
-@keyframes popIn {
-    0% { transform: scale(0.7); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* --- ADATTAMENTO SPECIFICO PER SMARTPHONE E DISPLAY PICCOLI (MEDIA QUERIES) --- */
-@media (max-width: 768px) {
-    #ui-container {
-        width: 95%; /* Più largo per sfruttare lo spazio stretto */
-        top: 5px;
-    }
-    
-    #ui-header {
-        padding: 8px 10px; /* Riduce l'ingombro verticale */
-    }
-
-    #ui-title, #ui-score {
-        font-size: 13px; /* Testo più piccolo e leggibile su smartphone */
-    }
-
-    #progress-wrapper {
-        height: 10px; /* Riduce leggermente lo spessore della barra */
-    }
-
-    #victory-box {
-        padding: 25px 15px; /* Compone lo spazio del popup di vittoria */
-    }
-
-    #victory-title {
-        font-size: 22px; /* Impedisce al titolo di andare a capo spezzandosi male */
-    }
-
-    #victory-subtitle {
-        font-size: 14px;
-    }
-}: #ecf0f1; }
+#victory-screen h1 { font-size: 54px; color: #2ecc71; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+#victory-screen p { font-size: 22px; color: #ecf0f1; }
